@@ -87,9 +87,9 @@ local drawMap = function(x, y, s)
       if c then lg.setColor(c) end
     end
     lg.rectangle("fill", 0,0, 32*s,32*s)
-    if showHeight then
+    if showHeight and tile.height then
       lg.setColor(1,1,1)
-      lg.print(tile.height or 0, 0,0)
+      lg.print(tile.height, 0,0)
     end
     lg.pop()
   end
@@ -106,12 +106,28 @@ end
 
 local drag = false
 local clickNDrag = false
-love.mousepressed = function(x, y, button)
+local clickNDragRight = false
+love.mousepressed = function(_x, _y, button)
   if button == 3 then
     drag = true
   elseif button == 1 then
-    click(x, y)
+    click(_x, _y)
     clickNDrag = true
+  elseif button == 2 then
+    clickNDragRight = true
+    local gx, gy = grid:positionToTile(_x-x, _y-y)
+    if map[gx] and map[gx][gy] then
+      map[gx][gy][tools[tool]] = nil
+      local count = 0
+      for _, t in ipairs(tools) do
+        if map[gx][gy][t] == nil then
+          count = count + 1
+        end
+      end
+      if count == #tools then
+        map[gx][gy] = nil
+      end
+    end
   end
 end
 
@@ -120,8 +136,24 @@ love.mousemoved = function(_x, _y, dx, dy)
     x = x + dx
     y = y + dy
     print(x, y)
-  elseif clickNDrag then
+  end
+  if clickNDrag then
     click(_x, _y)
+  end
+  if clickNDragRight then
+    local gx, gy = grid:positionToTile(_x-x, _y-y)
+    if map[gx] and map[gx][gy] then
+      map[gx][gy][tools[tool]] = nil
+      local count = 0
+      for _, t in ipairs(tools) do
+        if map[gx][gy][t] == nil then
+          count = count + 1
+        end
+      end
+      if count == #tools then
+        map[gx][gy] = nil
+      end
+    end
   end
 end
 
@@ -130,6 +162,8 @@ love.mousereleased = function(_,_, button)
     drag = false
   elseif button == 1 then
     clickNDrag = false
+  elseif button == 2 then
+    clickNDragRight = false
   end
 end
 
