@@ -87,6 +87,10 @@ local drawMap = function(x, y, s)
       if c then lg.setColor(c) end
     end
     lg.rectangle("fill", 0,0, 32*s,32*s)
+    if showHeight then
+      lg.setColor(1,1,1)
+      lg.print(tile.height or 0, 0,0)
+    end
     lg.pop()
   end
   end
@@ -101,29 +105,31 @@ love.draw = function()
 end
 
 local drag = false
-local clickTime, clickx, clicky
+local clickNDrag = false
 love.mousepressed = function(x, y, button)
-  if button == 1 then
+  if button == 3 then
     drag = true
-    clickx, clicky = x, y
-    clickTime = love.timer.getTime()
+  elseif button == 1 then
+    click(x, y)
+    clickNDrag = true
   end
 end
 
-love.mousemoved = function(_,_, dx, dy)
+love.mousemoved = function(_x, _y, dx, dy)
   if drag then
     x = x + dx
     y = y + dy
     print(x, y)
+  elseif clickNDrag then
+    click(_x, _y)
   end
 end
 
 love.mousereleased = function(_,_, button)
-  if button == 1 then
+  if button == 3 then
     drag = false
-    if love.timer.getTime() - clickTime < 0.2 then
-      click(clickx, clicky)
-    end
+  elseif button == 1 then
+    clickNDrag = false
   end
 end
 
