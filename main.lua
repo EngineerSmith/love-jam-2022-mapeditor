@@ -11,7 +11,7 @@ local tool = 1
 local tools = {
   [1] = "height",
   [2] = "texture",
-  [3] = "walkable",
+  [3] = "notWalkable",
 } 
 
 local grid = require("grid").new(32,32)
@@ -19,7 +19,7 @@ local grid = require("grid").new(32,32)
 local map = {}
 
 local click = function(_x, _y)
-  local gx, gy = grid:positionToTile(_x-x, _y-y)
+  local gx, gy = grid:positionToTile((_x-x)/s, (_y-y)/s)
   if not map[gx] then
     map[gx] = {}
   end
@@ -34,7 +34,7 @@ local click = function(_x, _y)
   end
 end
 
-local showHeight = false
+local showHeight = 0
 love.keypressed = function(key)
   if key == "tab" then
     tool = tool + 1
@@ -57,7 +57,10 @@ love.keypressed = function(key)
   elseif tonumber(key) then
     numSelected = tonumber(key)
   elseif key == "rshift" or "lshift" then
-    showHeight = not showHeight
+    showHeight = showHeight + 1
+    if showHeight > 2 then
+      showHeight = 0
+    end
   end
 end
 
@@ -87,9 +90,12 @@ local drawMap = function(x, y, s)
       if c then lg.setColor(c) end
     end
     lg.rectangle("fill", 0,0, 32*s,32*s)
-    if showHeight and tile.height then
+    if showHeight == 1 and tile.height then
       lg.setColor(1,1,1)
-      lg.print(tile.height, 0,0)
+      lg.print(tile.height)
+     elseif showHeight == 2 and tile.notWalkable then
+        lg.setColor(0.8,0.4,0.4)
+        lg.print("NW")
     end
     lg.pop()
   end
@@ -115,7 +121,7 @@ love.mousepressed = function(_x, _y, button)
     clickNDrag = true
   elseif button == 2 then
     clickNDragRight = true
-    local gx, gy = grid:positionToTile(_x-x, _y-y)
+    local gx, gy = grid:positionToTile((_x-x)/s, (_y-y)/s)
     if map[gx] and map[gx][gy] then
       map[gx][gy][tools[tool]] = nil
       local count = 0
@@ -141,7 +147,7 @@ love.mousemoved = function(_x, _y, dx, dy)
     click(_x, _y)
   end
   if clickNDragRight then
-    local gx, gy = grid:positionToTile(_x-x, _y-y)
+    local gx, gy = grid:positionToTile((_x-x)/s, (_y-y)/s)
     if map[gx] and map[gx][gy] then
       map[gx][gy][tools[tool]] = nil
       local count = 0
